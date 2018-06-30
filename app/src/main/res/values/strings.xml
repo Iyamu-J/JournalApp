@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">My Journal</string>
+    <string name="action_sign_in">Sign In</string>
+
+    <string name="add_entry_activity_name">New Entry</string>
+
+    <string name="edit_text_add_journal_note">Note</string>
+    <string name="edit_text_add_journal_title">Title</string>
+
+    <string name="empty_message">No entries yet</string>
+
+    <string name="label_google_sign_in">My Profile</string>
+
+    <string name="desc_profile_pic">Google Profile Picture</string>
+
+    <string name="sign_in">Sign In</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="signed_in">Signed In</string>
+    <string name="signed_out">Signed Out</string>
+    <string name="status_sign_in_failed">Sign-in failed</string>
+
+</resources>
