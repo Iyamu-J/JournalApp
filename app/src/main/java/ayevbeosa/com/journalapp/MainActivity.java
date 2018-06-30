@@ -65,10 +65,16 @@ public class MainActivity extends AppCompatActivity implements EntryAdapter.Item
         setupViewModels();
     }
 
+    /**
+     * This method implements the swipe option the Recycler Item
+     * the swipe option is used to delete an entry
+     * @param mRecyclerView the current RecyclerView
+     */
     private void itemTouchHelper(final RecyclerView mRecyclerView) {
         ItemTouchHelper.SimpleCallback itemTouchHelperCallback
                 = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
 
+            // declares the required variables
             Drawable deleteIcon;
             Drawable background;
             int deleteIconMargin;
@@ -76,6 +82,9 @@ public class MainActivity extends AppCompatActivity implements EntryAdapter.Item
             int intrinsicHeight;
             boolean initiated;
 
+            /**
+             * Initialises the DeleteIcon and the background
+             */
             private void init() {
                 deleteIcon = ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_delete_black_24dp);
                 deleteIcon.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
@@ -92,16 +101,21 @@ public class MainActivity extends AppCompatActivity implements EntryAdapter.Item
 
             @Override
             public void onSwiped(final RecyclerView.ViewHolder viewHolder, int direction) {
+                // gets position of swiped item
                 final int deletedPosition = viewHolder.getAdapterPosition();
+                // saves the entries in a List
                 final List<JournalEntry> entries = mAdapter.getEntries();
+                // get the JournalEntry Object of the swiped item
                 final JournalEntry deletedEntry = entries.get(deletedPosition);
+                // connects the database and deletes the swiped JournalEntry Object
                 AppExecutors.getInstance().getDiskIO().execute(new Runnable() {
                     @Override
                     public void run() {
                         mDb.journalDao().deleteEntry(entries.get(deletedPosition));
                     }
                 });
-                restoreEntry(deletedEntry, mRecyclerView);
+                // restores the deleted JournalEntry Object
+                restoreEntry(deletedEntry);
             }
 
             @Override
@@ -123,6 +137,7 @@ public class MainActivity extends AppCompatActivity implements EntryAdapter.Item
                         itemView.getBottom());
                 background.draw(c);
 
+                // the logic is used to create the desired Drawables(DeleteIcon and Background)
                 int itemHeight = itemView.getHeight();
                 int deleteIconLeft;
                 int deleteIconRight;
@@ -142,10 +157,16 @@ public class MainActivity extends AppCompatActivity implements EntryAdapter.Item
             }
         };
 
+        // attaches the ItemTouchHelper to the RecyclerView
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(mRecyclerView);
     }
 
-    private void restoreEntry(final JournalEntry deletedEntry, View view) {
+    /**
+     * This method allows for restoration of the deleted JournalEntry Object
+     * makes use of the SnackBar Action Method
+     * @param deletedEntry the swiped JournalEntry Object
+     */
+    private void restoreEntry(final JournalEntry deletedEntry) {
         Snackbar snackbar = Snackbar.make(findViewById(R.id.main_layout), "Entry deleted", Snackbar.LENGTH_LONG);
         snackbar.setAction("UNDO", new View.OnClickListener() {
             @Override
@@ -176,7 +197,7 @@ public class MainActivity extends AppCompatActivity implements EntryAdapter.Item
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
+        // if the user clicks on the SignIn Menu, it starts the GoogleSignInActivity
         if (id == R.id.action_sign_in) {
             Intent intent = new Intent(MainActivity.this, GoogleSignInActivity.class);
             startActivity(intent);
@@ -193,6 +214,9 @@ public class MainActivity extends AppCompatActivity implements EntryAdapter.Item
         startActivity(intent);
     }
 
+    /**
+     * Creates the ViewModels for the application
+     */
     private void setupViewModels() {
         MainViewModel viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
         viewModel.getEntries().observe(this, new Observer<List<JournalEntry>>() {
