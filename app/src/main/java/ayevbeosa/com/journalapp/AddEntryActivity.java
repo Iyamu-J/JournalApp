@@ -20,6 +20,7 @@ import ayevbeosa.com.journalapp.viewmodels.AddEntryViewModelFactory;
 
 public class AddEntryActivity extends AppCompatActivity {
 
+    // required tags
     public static final String EXTRA_ENTRY_ID = "extraEntryId";
     public static final String INSTANCE_ENTRY_ID = "instanceTaskId";
     private static final int DEFAULT_ENTRY_ID = -1;
@@ -35,23 +36,30 @@ public class AddEntryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_entry);
 
+        // TextView setups
         mEntryTitle = findViewById(R.id.editTextEntryTitle);
         mEntryNote = findViewById(R.id.editTextEntryNote);
 
+        // connecting to database
         mDb = AppDatabase.getInstance(getApplicationContext());
 
+        // checks if an Entry already exists
         if (savedInstanceState != null && savedInstanceState.containsKey(INSTANCE_ENTRY_ID)) {
             mEntryId = savedInstanceState.getInt(INSTANCE_ENTRY_ID, DEFAULT_ENTRY_ID);
         }
 
+        // gets Intent extra
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(EXTRA_ENTRY_ID)) {
+            // checks if entry exists and stores the Id
             if (mEntryId == DEFAULT_ENTRY_ID) {
                 mEntryId = intent.getIntExtra(EXTRA_ENTRY_ID, DEFAULT_ENTRY_ID);
 
+                // creates a ViewModel for this Activity using the ViewModelFactory
                 AddEntryViewModelFactory factory = new AddEntryViewModelFactory(mDb, mEntryId);
                 final AddEntryViewModel viewModel = ViewModelProviders.of(this, factory).get(AddEntryViewModel.class);
 
+                // checks for changes and updates accordingly
                 viewModel.getEntry().observe(this, new Observer<JournalEntry>() {
                     @Override
                     public void onChanged(@Nullable JournalEntry journalEntry) {
@@ -78,6 +86,7 @@ public class AddEntryActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
+        // saves or updates a JournalEntry Object
         if (itemId == R.id.app_bar_done) {
             onDoneActionClick();
             return true;
@@ -85,6 +94,10 @@ public class AddEntryActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * sets the TextViews
+     * @param entry the JournalEntry Object needed to set the TextViews
+     */
     private void updateUI(JournalEntry entry) {
         if (entry == null) {
             return;
@@ -93,6 +106,10 @@ public class AddEntryActivity extends AppCompatActivity {
         mEntryNote.setText(entry.getNote());
     }
 
+    /**
+     * connects the database and
+     * save or update an entry to the database
+     */
     public void onDoneActionClick() {
         String title = mEntryTitle.getText().toString();
         String note = mEntryNote.getText().toString();
