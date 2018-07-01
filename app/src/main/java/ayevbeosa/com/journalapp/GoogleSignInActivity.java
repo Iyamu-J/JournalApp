@@ -12,6 +12,9 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.bumptech.glide.request.RequestOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -40,7 +43,6 @@ public class GoogleSignInActivity extends AppCompatActivity implements View.OnCl
     private TextView mProfileEmailTextView;
     private ImageView mProfilePictureImageView;
     private ProgressBar mProgressBar;
-    private Snackbar mSnackbar;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -108,12 +110,15 @@ public class GoogleSignInActivity extends AppCompatActivity implements View.OnCl
         int id = view.getId();
         switch (id) {
             case R.id.btn_sign_in:
+                makeProgressBarVisible(true);
                 signIn();
                 break;
             case R.id.btn_sign_out:
+                makeProgressBarVisible(true);
                 signOut();
                 break;
             case R.id.btn_disconnect:
+                makeProgressBarVisible(true);
                 revokeAccess();
                 break;
         }
@@ -135,6 +140,9 @@ public class GoogleSignInActivity extends AppCompatActivity implements View.OnCl
                             Log.d(TAG, "signInWithCredential:success");
                             FirebaseUser user = mFirebaseAuth.getCurrentUser();
                             updateUI(user);
+                            makeProgressBarVisible(false);
+                            Snackbar.make(findViewById(R.id.sign_in_layout), "Signed In Successfully", Snackbar.LENGTH_SHORT)
+                            .show();
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "signInWithCredential:failure", task.getException());
@@ -142,31 +150,30 @@ public class GoogleSignInActivity extends AppCompatActivity implements View.OnCl
                                     .show();
                             updateUI(null);
                         }
-                        mProgressBar.setVisibility(View.INVISIBLE);
                     }
                 });
     }
 
     private void updateUI(FirebaseUser user) {
-        mProgressBar.setVisibility(View.INVISIBLE);
         if (user != null) {
             mProfileNameTextView.setText(user.getDisplayName());
             mProfileEmailTextView.setText(user.getEmail());
-            mProfilePictureImageView.setImageURI(user.getPhotoUrl());
+
+            Glide.with(this)
+                    .load(user.getPhotoUrl())
+                    .apply(RequestOptions.bitmapTransform(new CircleCrop()))
+                    .into(mProfilePictureImageView);
 
             mSignInButton.setVisibility(View.GONE);
             findViewById(R.id.btn_sign_out).setVisibility(View.VISIBLE);
             findViewById(R.id.btn_disconnect).setVisibility(View.VISIBLE);
-            if (mSnackbar == null) {
-                mSnackbar = Snackbar.make(findViewById(R.id.sign_in_layout), "Signed In Successfully", Snackbar.LENGTH_SHORT);
-                mSnackbar.show();
-            }
-            mSnackbar = null;
-
         } else {
-            mSignInButton.setVisibility(View.VISIBLE);
+            mProfileNameTextView.setText("");
+            mProfileEmailTextView.setText("");
+            findViewById(R.id.btn_sign_in).setVisibility(View.VISIBLE);
             findViewById(R.id.btn_sign_out).setVisibility(View.GONE);
             findViewById(R.id.btn_disconnect).setVisibility(View.GONE);
+            mProfilePictureImageView.setImageResource(R.drawable.ic_person_white);
         }
     }
 
@@ -181,6 +188,7 @@ public class GoogleSignInActivity extends AppCompatActivity implements View.OnCl
         mGoogleSignInClient.signOut().addOnCompleteListener(this, new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
+                makeProgressBarVisible(false);
                 updateUI(null);
             }
         });
@@ -192,8 +200,17 @@ public class GoogleSignInActivity extends AppCompatActivity implements View.OnCl
         mGoogleSignInClient.revokeAccess().addOnCompleteListener(this, new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
+                makeProgressBarVisible(false);
                 updateUI(null);
             }
         });
+    }
+
+    private void makeProgressBarVisible(boolean makeVisible) {
+        if (makeVisible) {
+            mProgressBar.setVisibility(View.VISIBLE);
+        } else {
+            mProgressBar.setVisibility(View.GONE);
+        }
     }
 }
